@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h4 class="text-white"><i class="fas fa-tasks me-2"></i>Tarefas</h4>
+    <p class="text-muted">Filtre, edite e gerencie suas tarefas.</p>
+  </div>
+  <div>
+    <a href="{{ url_for('new_task') }}" class="btn btn-primary"><i class="fas fa-plus me-2"></i>Nova tarefa</a>
+  </div>
+</div>
+<form class="row g-3 mb-4" method="get" action="{{ url_for('tasks') }}">
+  <div class="col-md-3">
+    <select class="form-select" name="status">
+      <option value="">Status</option>
+      {% for status in STATUS_CHOICES %}
+      <option value="{{ status }}" {% if status_filter==status %}selected{% endif %}>{{ status }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-md-3">
+    <select class="form-select" name="priority">
+      <option value="">Prioridade</option>
+      {% for priority in PRIORITIES %}
+      <option value="{{ priority }}" {% if priority_filter==priority %}selected{% endif %}>{{ priority }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-md-3">
+    <input type="text" class="form-control" name="responsible" placeholder="Responsável" value="{{ responsible_filter }}">
+  </div>
+  <div class="col-md-3">
+    <button type="submit" class="btn btn-success w-100"><i class="fas fa-filter me-2"></i>Filtrar</button>
+  </div>
+</form>
+<div class="table-responsive shadow-sm rounded-4">
+  <table class="table tasks-table align-middle mb-0">
+    <thead>
+      <tr>
+        <th>Cliente</th>
+        <th>Descrição</th>
+        <th>Responsável</th>
+        <th>Prazo</th>
+        <th>Prioridade</th>
+        <th>Status</th>
+        <th>Valor</th>
+        <th>Ações</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for task in tasks %}
+      <tr>
+        <td>{{ task.client.full_name }}</td>
+        <td>{{ task.description[:50] }}{% if task.description|length > 50 %}...{% endif %}</td>
+        <td>{{ task.responsible or '-' }}</td>
+        <td>{{ task.deadline | format_date }}</td>
+        <td>{{ task.priority }}</td>
+        <td>
+          <span class="badge badge-status {% if task.status == 'Pendente' %}badge-pendente{% elif task.status == 'Em andamento' %}badge-em-andamento{% elif task.status == 'Aguardando cliente' %}badge-aguardando-cliente{% elif task.status == 'Concluído' %}badge-concluido{% else %}badge-cancelado{% endif %}">{{ task.status }}</span>
+        </td>
+        <td>{{ task.service_value | format_currency }}</td>
+        <td>
+          <a href="{{ url_for('edit_task', task_id=task.id) }}" class="btn btn-sm btn-outline-light me-1" title="Editar tarefa"><i class="fas fa-pen"></i></a>
+          <form action="{{ url_for('delete_task', task_id=task.id) }}" method="post" class="d-inline" onsubmit="return confirm('Excluir esta tarefa?');">
+            <button type="submit" class="btn btn-sm btn-outline-danger" title="Excluir tarefa"><i class="fas fa-trash"></i></button>
+          </form>
+        </td>
+      </tr>
+      {% else %}
+      <tr>
+        <td colspan="8" class="text-center text-muted">Nenhuma tarefa encontrada.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+<div class="mt-3">
+  <a href="{{ url_for('export_data', model='tasks') }}" class="btn btn-outline-light"><i class="fas fa-file-excel me-2"></i>Exportar tarefas</a>
+  <a href="{{ url_for('export_data', model='clients') }}" class="btn btn-outline-light ms-2"><i class="fas fa-file-excel me-2"></i>Exportar clientes</a>
+</div>
+{% endblock %}
